@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.browntowndev.pocketcrew.feature.moa"
+    namespace = "com.browntowndev.pocketcrew.feature.inference"
     compileSdk = 36
 
     defaultConfig {
@@ -22,8 +22,6 @@ android {
 dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
-    implementation(project(":core:database"))
-    implementation(project(":core:ui"))
 
     // AndroidX Core
     implementation(libs.androidx.core.ktx)
@@ -33,12 +31,11 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
-    // WorkManager
-    implementation(libs.work.runtime.ktx)
-
-    // Inference
+    // Inference native bindings
     implementation(project(":llama-android"))
 
-    // Inference implementations
-    implementation(project(":feature:inference"))
+    // LiteRT and MediaPipe
+    implementation(libs.litert)
+    implementation(libs.litertlm.android)
+    implementation(libs.tasks.genai)
 }
