@@ -16,23 +16,22 @@
 
 package com.browntowndev.pocketcrew.domain.usecase.chat
 
-import com.browntowndev.pocketcrew.domain.model.chat.Chat
 import com.browntowndev.pocketcrew.domain.port.repository.ChatRepository
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
- * Use case for getting all chats as a Flow.
- * Listens to database changes via Room Flow.
- * Returns chats sorted by pinned first, then by lastModified descending.
+ * Use case for deleting a chat by its ID.
+ * This will cascade delete all associated messages due to foreign key constraints.
  */
-class GetAllChatsUseCase @Inject constructor(
+class DeleteChatUseCase @Inject constructor(
     private val chatRepository: ChatRepository
 ) {
     /**
-     * Returns all chats as a Flow, sorted by pinned first, then by lastModified descending.
+     * Deletes a chat by its ID.
+     *
+     * @param chatId The ID of the chat to delete
      */
-    operator fun invoke(): Flow<List<Chat>> {
-        return chatRepository.getAllChats()
+    suspend operator fun invoke(chatId: Long) {
+        chatRepository.deleteChat(chatId)
     }
 }
