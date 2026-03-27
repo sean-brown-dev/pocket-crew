@@ -16,11 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.browntowndev.pocketcrew.domain.model.download.DownloadModelsResult
-import com.browntowndev.pocketcrew.presentation.navigation.PocketCrewNavGraph
+import com.browntowndev.pocketcrew.presentation.navigation.pocketCrewNavGraph
 import com.browntowndev.pocketcrew.presentation.navigation.Routes
 import com.browntowndev.pocketcrew.core.ui.theme.PocketCrewTheme
 import kotlinx.coroutines.launch
 
+@Suppress("FunctionNaming")
 @Composable
 fun PocketCrewApp(
     viewModel: PocketCrewAppViewModel = hiltViewModel(),
@@ -47,7 +48,7 @@ fun PocketCrewApp(
         val scope = rememberCoroutineScope()
 
         Box(Modifier.fillMaxSize()) {
-            PocketCrewNavGraph(
+            pocketCrewNavGraph(
                 navController = navController,
                 startDestination = initialRoute,
                 modelsResult = modelsResult,

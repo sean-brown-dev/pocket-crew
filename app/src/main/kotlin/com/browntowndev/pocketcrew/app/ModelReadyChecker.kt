@@ -57,22 +57,34 @@ class ModelReadyChecker @Inject constructor(
         val configsByType = allConfigs.associateBy { it.modelType }
 
         val requiredFiles = listOfNotNull(
-            configsByType[ModelType.VISION]?.let { computeFilename(ModelType.VISION, it.metadata.modelFileFormat) },
-            configsByType[ModelType.DRAFT_ONE]?.let { computeFilename(ModelType.DRAFT_ONE, it.metadata.modelFileFormat) },
-            configsByType[ModelType.DRAFT_TWO]?.let { computeFilename(ModelType.DRAFT_TWO, it.metadata.modelFileFormat) },
-            configsByType[ModelType.MAIN]?.let { computeFilename(ModelType.MAIN, it.metadata.modelFileFormat) },
-            configsByType[ModelType.FAST]?.let { computeFilename(ModelType.FAST, it.metadata.modelFileFormat) }
+            configsByType[ModelType.VISION]?.let {
+                computeFilename(ModelType.VISION, it.metadata.modelFileFormat)
+            },
+            configsByType[ModelType.DRAFT_ONE]?.let {
+                computeFilename(ModelType.DRAFT_ONE, it.metadata.modelFileFormat)
+            },
+            configsByType[ModelType.DRAFT_TWO]?.let {
+                computeFilename(ModelType.DRAFT_TWO, it.metadata.modelFileFormat)
+            },
+            configsByType[ModelType.MAIN]?.let {
+                computeFilename(ModelType.MAIN, it.metadata.modelFileFormat)
+            },
+            configsByType[ModelType.FAST]?.let {
+                computeFilename(ModelType.FAST, it.metadata.modelFileFormat)
+            }
         )
 
-        for (filename in requiredFiles) {
+        val isReady = requiredFiles.all { filename ->
             val file = File(modelsDir, filename)
-            if (!file.exists() || file.length() == 0L) {
+            val fileReady = file.exists() && file.length() > 0L
+            if (!fileReady) {
                 Log.d(TAG, "Model $filename not ready: exists=${file.exists()}, size=${file.length()}")
-                return false
             }
+            fileReady
         }
-
-        Log.d(TAG, "All models are ready (fast check)")
-        return true
+        if (isReady) {
+            Log.d(TAG, "All models are ready (fast check)")
+        }
+        return isReady
     }
 }

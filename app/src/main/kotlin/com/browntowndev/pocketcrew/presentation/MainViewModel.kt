@@ -21,7 +21,8 @@ import javax.inject.Inject
 sealed interface AppStartupState {
     data object Loading : AppStartupState
     data class Ready(val modelsResult: DownloadModelsResult?, val errorMessage: String? = null) : AppStartupState {
-        val initialRoute = if (errorMessage != null || modelsResult?.modelsToDownload?.isNotEmpty() == true) Routes.MODEL_DOWNLOAD else Routes.CHAT
+        val initialRoute = if (errorMessage != null ||
+            modelsResult?.modelsToDownload?.isNotEmpty() == true) Routes.MODEL_DOWNLOAD else Routes.CHAT
     }
 }
 
@@ -46,8 +47,13 @@ class MainViewModel @Inject constructor(
                 val modelsResult = initializeModelsUseCase()
 
                 _startupState.update { AppStartupState.Ready(modelsResult) }
-            } catch (e: Exception) {
-                errorHandler.handleError("MainViewModel", "Critical failure during app initialization", e, "Failed to initialize models")
+            } catch (e: java.io.IOException) {
+                errorHandler.handleError(
+                    "MainViewModel",
+                    "Critical failure during app initialization",
+                    e,
+                    "Failed to initialize models"
+                )
                 // Fallback: direct to download screen with error to allow recovery/re-sync
                 // Return an empty modelsResult so DownloadViewModel can still function
                 _startupState.update {
