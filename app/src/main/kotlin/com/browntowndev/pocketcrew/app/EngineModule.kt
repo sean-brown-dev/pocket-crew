@@ -42,7 +42,7 @@ object EngineModule {
 
     private const val TAG = "EngineModule"
     private const val MAX_TOKENS = 16384
-    private const val MAX_LAYERS = 32
+    private const val MAX_GPU_LAYERS = 32
 
     /**
      * Resolves the model file path from the models directory.
@@ -321,7 +321,7 @@ object EngineModule {
                     loggingPort
                 )
                 val tunings = config.tunings
-                val gpuConfig = GpuConfig.forDevice(context, config.metadata.sizeInBytes, MAX_LAYERS)
+                val gpuConfig = GpuConfig.forDevice(context, config.metadata.sizeInBytes, MAX_GPU_LAYERS)
 
                 service.configure(
                     modelPath = modelPath,

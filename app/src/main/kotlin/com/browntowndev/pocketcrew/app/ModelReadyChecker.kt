@@ -45,6 +45,7 @@ class ModelReadyChecker @Inject constructor(
      * Quick synchronous check - only checks filesystem without remote config.
      * Use this as a fast path when you need a quick check without network.
      */
+    @Suppress("ReturnCount")
     fun isReadyFastSync(): Boolean {
         val modelsDir = getModelsDirectory()
         if (!modelsDir.exists()) {
@@ -74,17 +75,15 @@ class ModelReadyChecker @Inject constructor(
             }
         )
 
-        val isReady = requiredFiles.all { filename ->
+        for (filename in requiredFiles) {
             val file = File(modelsDir, filename)
-            val fileReady = file.exists() && file.length() > 0L
-            if (!fileReady) {
+            if (!file.exists() || file.length() == 0L) {
                 Log.d(TAG, "Model $filename not ready: exists=${file.exists()}, size=${file.length()}")
+                return false
             }
-            fileReady
         }
-        if (isReady) {
-            Log.d(TAG, "All models are ready (fast check)")
-        }
-        return isReady
+
+        Log.d(TAG, "All models are ready (fast check)")
+        return true
     }
 }

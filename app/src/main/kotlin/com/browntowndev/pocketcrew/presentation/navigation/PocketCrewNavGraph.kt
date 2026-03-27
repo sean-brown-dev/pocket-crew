@@ -17,8 +17,9 @@ import com.browntowndev.pocketcrew.feature.download.ModelDownloadScreen
 
 private const val ANIMATION_DURATION = 300
 
+@Suppress("FunctionNaming")
 @Composable
-fun pocketCrewNavGraph(
+fun PocketCrewNavGraph(
     navController: NavHostController,
     onShowSnackbar: (message: String, actionLabel: String?) -> Unit,
     startDestination: String,
