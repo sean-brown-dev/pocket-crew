@@ -39,6 +39,7 @@ class MainViewModel @Inject constructor(
         initializeApp()
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun initializeApp() {
         viewModelScope.launch {
             try {
@@ -47,7 +48,7 @@ class MainViewModel @Inject constructor(
                 val modelsResult = initializeModelsUseCase()
 
                 _startupState.update { AppStartupState.Ready(modelsResult) }
-            } catch (e: java.io.IOException) {
+            } catch (e: Exception) {
                 errorHandler.handleError(
                     "MainViewModel",
                     "Critical failure during app initialization",
