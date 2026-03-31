@@ -138,4 +138,108 @@ class DownloadWorkRepositoryTest {
         // Assert
         assertEquals(null, result)
     }
+
+    @Test
+    fun isWorkRunning_returnsTrue_whenStateIsEnqueued() {
+        // Arrange
+        val workInfo = createMockWorkInfo(WorkInfo.State.ENQUEUED)
+        every {
+            mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
+        } returns listOf(workInfo)
+
+        // Act
+        val result = repository.isWorkRunning()
+
+        // Assert
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun isWorkRunning_returnsTrue_whenStateIsRunning() {
+        // Arrange
+        val workInfo = createMockWorkInfo(WorkInfo.State.RUNNING)
+        every {
+            mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
+        } returns listOf(workInfo)
+
+        // Act
+        val result = repository.isWorkRunning()
+
+        // Assert
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun isWorkRunning_returnsTrue_whenStateIsBlocked() {
+        // Arrange
+        val workInfo = createMockWorkInfo(WorkInfo.State.BLOCKED)
+        every {
+            mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
+        } returns listOf(workInfo)
+
+        // Act
+        val result = repository.isWorkRunning()
+
+        // Assert
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun isWorkRunning_returnsFalse_whenStateIsSucceeded() {
+        // Arrange
+        val workInfo = createMockWorkInfo(WorkInfo.State.SUCCEEDED)
+        every {
+            mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
+        } returns listOf(workInfo)
+
+        // Act
+        val result = repository.isWorkRunning()
+
+        // Assert
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun isWorkRunning_returnsFalse_whenStateIsFailed() {
+        // Arrange
+        val workInfo = createMockWorkInfo(WorkInfo.State.FAILED)
+        every {
+            mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
+        } returns listOf(workInfo)
+
+        // Act
+        val result = repository.isWorkRunning()
+
+        // Assert
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun isWorkRunning_returnsFalse_whenStateIsCancelled() {
+        // Arrange
+        val workInfo = createMockWorkInfo(WorkInfo.State.CANCELLED)
+        every {
+            mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
+        } returns listOf(workInfo)
+
+        // Act
+        val result = repository.isWorkRunning()
+
+        // Assert
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun isWorkRunning_returnsFalse_whenNoWorkInfo() {
+        // Arrange
+        every {
+            mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
+        } returns emptyList()
+
+        // Act
+        val result = repository.isWorkRunning()
+
+        // Assert
+        assertEquals(false, result)
+    }
 }
