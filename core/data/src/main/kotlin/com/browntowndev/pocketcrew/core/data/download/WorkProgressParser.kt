@@ -176,7 +176,6 @@ class WorkProgressParser @Inject constructor(
             val status = FileStatus.valueOf(parts[3])
             val speedMBs = parts[4].toDoubleOrNull()?.coerceAtLeast(0.0)
 
-            // FIX: Safely parse modelTypes, handle empty string
             val modelTypesStr = parts.getOrNull(5) ?: ""
             val modelTypes = if (modelTypesStr.isNotBlank()) {
                 modelTypesStr.split(",").mapNotNull { typeStr ->
