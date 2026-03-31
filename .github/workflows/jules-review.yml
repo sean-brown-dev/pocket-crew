@@ -1,0 +1,66 @@
+name: Jules Awaited Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  jules-review:
+    name: Run Google Jules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Jules SDK
+        run: npm install @google/jules-sdk
+
+      - name: Execute Jules Review
+        env:
+          # This is the only secret you need to configure in your repo settings
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          cat << 'INNER_EOF' > jules-review.mjs
+          import { jules } from '@google/jules-sdk';
+
+          async function startReview() {
+            const prNumber = process.env.PR_NUMBER;
+            const repo = process.env.REPO;
+
+            console.log(`Triggering Google Jules for ${repo} PR #${prNumber}...`);
+
+            // jules.run() creates the automated session on the remote VM
+            const session = await jules.run({
+              prompt: `Perform a comprehensive code review on the changes in PR #${prNumber}. Focus on identifying bugs, potential memory leaks, and ensuring clean architecture. Pay special attention to any Android components and .NET backend integrations to strictly enforce established patterns. Leave structured inline comments directly on the pull request for any issues you discover.`,
+              source: {
+                github: repo,
+                baseBranch: process.env.BRANCH
+              }
+            });
+
+            console.log(`Jules session established. Session ID: ${session.id}`);
+            console.log(`Awaiting deep-dive analysis from the Google Cloud VM...`);
+
+            // This is the crucial step for the "Awaited" method.
+            // It holds the GitHub Action open (keeping the yellow spinner spinning)
+            // until Jules fully finishes the code review.
+            await session.result();
+
+            console.log('Jules review completed successfully!');
+          }
+
+          startReview().catch(error => {
+            console.error('Fatal error during Jules review:', error);
+            process.exit(1); // Fails the action (red X) if Jules crashes
+          });
+          INNER_EOF
+
+          node jules-review.mjs
