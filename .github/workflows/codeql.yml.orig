@@ -44,7 +44,6 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: 'java-kotlin'
-        build-mode: manual
         # Optional: Add security-extended or security-and-quality queries
         # queries: security-extended,security-and-quality
 
