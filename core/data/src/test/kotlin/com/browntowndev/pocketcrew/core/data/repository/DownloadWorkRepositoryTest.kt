@@ -7,6 +7,7 @@ import com.browntowndev.pocketcrew.domain.model.download.ModelConfig
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -140,12 +141,21 @@ class DownloadWorkRepositoryTest {
     }
 
     @Test
+    fun cancelDownload_callsWorkManager() {
+        // Act
+        repository.cancelDownload()
+
+        // Assert
+        verify { mockWorkManager.cancelUniqueWork(ModelConfig.WORK_TAG) }
+    }
+
+    @Test
     fun isWorkRunning_returnsTrue_whenStateIsEnqueued() {
         // Arrange
-        val workInfo = createMockWorkInfo(WorkInfo.State.ENQUEUED)
+        val workInfoEnqueued = createMockWorkInfo(WorkInfo.State.ENQUEUED)
         every {
             mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
-        } returns listOf(workInfo)
+        } returns listOf(workInfoEnqueued)
 
         // Act
         val result = repository.isWorkRunning()
@@ -157,10 +167,10 @@ class DownloadWorkRepositoryTest {
     @Test
     fun isWorkRunning_returnsTrue_whenStateIsRunning() {
         // Arrange
-        val workInfo = createMockWorkInfo(WorkInfo.State.RUNNING)
+        val workInfoRunning = createMockWorkInfo(WorkInfo.State.RUNNING)
         every {
             mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
-        } returns listOf(workInfo)
+        } returns listOf(workInfoRunning)
 
         // Act
         val result = repository.isWorkRunning()
@@ -172,10 +182,10 @@ class DownloadWorkRepositoryTest {
     @Test
     fun isWorkRunning_returnsTrue_whenStateIsBlocked() {
         // Arrange
-        val workInfo = createMockWorkInfo(WorkInfo.State.BLOCKED)
+        val workInfoBlocked = createMockWorkInfo(WorkInfo.State.BLOCKED)
         every {
             mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
-        } returns listOf(workInfo)
+        } returns listOf(workInfoBlocked)
 
         // Act
         val result = repository.isWorkRunning()
@@ -187,10 +197,10 @@ class DownloadWorkRepositoryTest {
     @Test
     fun isWorkRunning_returnsFalse_whenStateIsSucceeded() {
         // Arrange
-        val workInfo = createMockWorkInfo(WorkInfo.State.SUCCEEDED)
+        val workInfoSucceeded = createMockWorkInfo(WorkInfo.State.SUCCEEDED)
         every {
             mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
-        } returns listOf(workInfo)
+        } returns listOf(workInfoSucceeded)
 
         // Act
         val result = repository.isWorkRunning()
@@ -202,10 +212,10 @@ class DownloadWorkRepositoryTest {
     @Test
     fun isWorkRunning_returnsFalse_whenStateIsFailed() {
         // Arrange
-        val workInfo = createMockWorkInfo(WorkInfo.State.FAILED)
+        val workInfoFailed = createMockWorkInfo(WorkInfo.State.FAILED)
         every {
             mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
-        } returns listOf(workInfo)
+        } returns listOf(workInfoFailed)
 
         // Act
         val result = repository.isWorkRunning()
@@ -217,10 +227,10 @@ class DownloadWorkRepositoryTest {
     @Test
     fun isWorkRunning_returnsFalse_whenStateIsCancelled() {
         // Arrange
-        val workInfo = createMockWorkInfo(WorkInfo.State.CANCELLED)
+        val workInfoCancelled = createMockWorkInfo(WorkInfo.State.CANCELLED)
         every {
             mockWorkManager.getWorkInfosForUniqueWork(ModelConfig.WORK_TAG).get()
-        } returns listOf(workInfo)
+        } returns listOf(workInfoCancelled)
 
         // Act
         val result = repository.isWorkRunning()
@@ -242,4 +252,5 @@ class DownloadWorkRepositoryTest {
         // Assert
         assertEquals(false, result)
     }
+
 }
