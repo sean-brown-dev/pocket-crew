@@ -11,6 +11,8 @@ jobs:
   jules-review:
     name: Run Google Jules
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -18,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install Jules SDK
         run: npm install @google/jules-sdk
@@ -27,9 +29,10 @@ jobs:
         env:
           # This is the only secret you need to configure in your repo settings
           JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
-          BRANCH: ${{ github.head_ref }}
+          BRANCH: ${{ github.base_ref }}
         run: |
           cat << 'INNER_EOF' > jules-review.mjs
           import { jules } from '@google/jules-sdk';
