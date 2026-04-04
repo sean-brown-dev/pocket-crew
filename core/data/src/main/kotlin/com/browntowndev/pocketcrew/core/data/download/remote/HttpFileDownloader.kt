@@ -49,7 +49,7 @@ class HttpFileDownloader @Inject constructor(
                     addHeader("Range", "bytes=$existingBytes-")
                 }
                 // Add HF Auth token if it's a HF URL
-                if (downloadUrl.startsWith("https://huggingface.co") && hfApiKey.isNotEmpty()) {
+                if (isHuggingFaceUrl(downloadUrl) && hfApiKey.isNotEmpty()) {
                     addHeader("Authorization", "Bearer $hfApiKey")
                 }
             }
@@ -66,7 +66,7 @@ class HttpFileDownloader @Inject constructor(
                     .url(downloadUrl)
                     .apply {
                         // Add HF Auth token if it's a HF URL
-                        if (downloadUrl.startsWith("https://huggingface.co") && hfApiKey.isNotEmpty()) {
+                        if (isHuggingFaceUrl(downloadUrl) && hfApiKey.isNotEmpty()) {
                             addHeader("Authorization", "Bearer $hfApiKey")
                         }
                     }
@@ -178,6 +178,14 @@ class HttpFileDownloader @Inject constructor(
         }
     }
 
+    private fun isHuggingFaceUrl(url: String): Boolean {
+        return try {
+            java.net.URL(url).host == "huggingface.co"
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     private suspend fun downloadWithRetry(
         request: Request,
         config: FileDownloaderPort.FileDownloadConfig,
@@ -284,7 +292,7 @@ class HttpFileDownloader @Inject constructor(
                 .head()
                 .apply {
                     // Add HF Auth token if it's a HF URL
-                    if (url.startsWith("https://huggingface.co") && hfApiKey.isNotEmpty()) {
+                    if (isHuggingFaceUrl(url) && hfApiKey.isNotEmpty()) {
                         addHeader("Authorization", "Bearer $hfApiKey")
                     }
                 }
