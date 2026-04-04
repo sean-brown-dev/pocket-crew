@@ -25,8 +25,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.activity.compose.BackHandler
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -157,7 +159,8 @@ fun HeaderRow(
             label = { Text("Name") },
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(8.dp),
-            singleLine = true
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
         )
         OutlinedTextField(
             value = header.value,
@@ -165,7 +168,8 @@ fun HeaderRow(
             label = { Text("Value") },
             modifier = Modifier.weight(1.5f),
             shape = RoundedCornerShape(8.dp),
-            singleLine = true
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
         )
         IconButton(onClick = onDelete) {
             Icon(
