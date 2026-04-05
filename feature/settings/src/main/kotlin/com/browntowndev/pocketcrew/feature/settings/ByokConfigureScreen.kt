@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -309,7 +310,8 @@ fun CredentialsConfigurationForm(
             onValueChange = { onAssetChange(asset.copy(displayName = it)) },
             label = { Text("Display Name (e.g. My OpenAI)") },
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
         )
 
         OutlinedTextField(
@@ -317,7 +319,8 @@ fun CredentialsConfigurationForm(
             onValueChange = { onAssetChange(asset.copy(modelId = it)) },
             label = { Text("Model ID (e.g. gpt-4o)") },
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
         )
 
         OutlinedTextField(
@@ -326,6 +329,10 @@ fun CredentialsConfigurationForm(
             label = { Text("API Key") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = if (asset.provider == ApiProvider.SELF_HOSTED) ImeAction.Next else ImeAction.Done
+            ),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -343,7 +350,11 @@ fun CredentialsConfigurationForm(
                 onValueChange = { onAssetChange(asset.copy(baseUrl = it)) },
                 label = { Text("Base URL") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Done
+                )
             )
         }
 
