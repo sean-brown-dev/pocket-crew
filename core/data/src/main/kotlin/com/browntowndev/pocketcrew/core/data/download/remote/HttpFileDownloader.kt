@@ -38,9 +38,15 @@ class HttpFileDownloader @Inject constructor(
         // Log model info for debugging
         logger.info(TAG, "[DOWNLOAD_START] url=$downloadUrl, sizeBytes=${config.expectedSizeBytes}, existingBytes=$existingBytes filename=${config.filename}")
 
-        // Use filename for the target file
-        val filename = config.filename
+        // Use filename for the target file and sanitize it to prevent path traversal
+        val filename = File(config.filename).name
         val targetFile = File(targetDir, filename)
+
+        // Ensure the target file is actually within the target directory
+        if (!targetFile.canonicalPath.startsWith(targetDir.canonicalPath)) {
+            throw SecurityException("Path traversal attempt detected: $filename")
+        }
+
         val tempFile = File(targetDir, "$filename${ModelConfig.TEMP_EXTENSION}")
 
         val request = Request.Builder()
@@ -186,8 +192,14 @@ class HttpFileDownloader @Inject constructor(
         targetDir: File,
         progressCallback: FileDownloaderPort.ProgressCallback?
     ): FileDownloaderPort.DownloadResult = withContext(Dispatchers.IO) {
-        val filename = config.filename
+        val filename = File(config.filename).name
         val targetFile = File(targetDir, filename)
+
+        // Ensure the target file is actually within the target directory
+        if (!targetFile.canonicalPath.startsWith(targetDir.canonicalPath)) {
+            throw SecurityException("Path traversal attempt detected: $filename")
+        }
+
         val tempFile = File(targetDir, "$filename${ModelConfig.TEMP_EXTENSION}")
 
         okHttpClient.newCall(request).execute().use { response ->
