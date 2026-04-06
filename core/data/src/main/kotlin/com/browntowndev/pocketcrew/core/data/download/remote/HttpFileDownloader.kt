@@ -43,7 +43,8 @@ class HttpFileDownloader @Inject constructor(
         val targetFile = File(targetDir, filename)
 
         // Ensure the target file is actually within the target directory
-        if (!targetFile.canonicalPath.startsWith(targetDir.canonicalPath)) {
+        val canonicalTargetDir = targetDir.canonicalPath + File.separator
+        if (!targetFile.canonicalPath.startsWith(canonicalTargetDir)) {
             throw SecurityException("Path traversal attempt detected: $filename")
         }
 
@@ -196,7 +197,8 @@ class HttpFileDownloader @Inject constructor(
         val targetFile = File(targetDir, filename)
 
         // Ensure the target file is actually within the target directory
-        if (!targetFile.canonicalPath.startsWith(targetDir.canonicalPath)) {
+        val canonicalTargetDir = targetDir.canonicalPath + File.separator
+        if (!targetFile.canonicalPath.startsWith(canonicalTargetDir)) {
             throw SecurityException("Path traversal attempt detected: $filename")
         }
 
