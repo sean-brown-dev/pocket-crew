@@ -50,6 +50,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+private object SettingsRegex {
+    val ggufEnd = Regex("-GGUF$", RegexOption.IGNORE_CASE)
+    val ggufExt = Regex("\\.gguf$", RegexOption.IGNORE_CASE)
+    val liteRtExt = Regex("\\.litertlm$", RegexOption.IGNORE_CASE)
+    val nonAlphanumeric = Regex("[^a-z0-9]")
+    val multipleHyphens = Regex("-+")
+}
 
 /**
  * UI-only transient state that doesn't need persistence.
@@ -274,9 +281,9 @@ class SettingsViewModel @Inject constructor(
         }
         
         val cleanName = modelNamePart
-            .replace(Regex("-GGUF$", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("\\.gguf$", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("\\.litertlm$", RegexOption.IGNORE_CASE), "")
+            .replace(SettingsRegex.ggufEnd, "")
+            .replace(SettingsRegex.ggufExt, "")
+            .replace(SettingsRegex.liteRtExt, "")
             .replace("-", " ")
         
         return LocalModelAssetUi(
@@ -814,8 +821,8 @@ class SettingsViewModel @Inject constructor(
 
     private suspend fun generateUniqueAlias(provider: String, modelId: String): String {
         val baseSlug = "${provider.lowercase()}-${modelId.lowercase()}"
-            .replace(Regex("[^a-z0-9]"), "-")
-            .replace(Regex("-+"), "-")
+            .replace(SettingsRegex.nonAlphanumeric, "-")
+            .replace(SettingsRegex.multipleHyphens, "-")
             .trim('-')
         
         val existingAliases = apiModelAssetsFlow.first().map { it.credentials.credentialAlias }.toSet()

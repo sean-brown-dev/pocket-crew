@@ -17,7 +17,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object LlamaDispatchersModule {
-
     @Provides
     @Singleton
     fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
@@ -32,18 +31,9 @@ object LlamaDispatchersModule {
 @Module
 @InstallIn(SingletonComponent::class)
 object LlamaEngineModule {
+    @Provides
+    fun provideLlamaEngine(ioDispatcher: CoroutineDispatcher): LlamaEnginePort = JniLlamaEngine(ioDispatcher)
 
     @Provides
-    fun provideLlamaEngine(
-        ioDispatcher: CoroutineDispatcher
-    ): LlamaEnginePort {
-        return JniLlamaEngine(ioDispatcher)
-    }
-
-    @Provides
-    fun provideLlamaChatSessionManager(
-        engine: LlamaEnginePort
-    ): LlamaChatSessionManager {
-        return LlamaChatSessionManager(engine)
-    }
+    fun provideLlamaChatSessionManager(engine: LlamaEnginePort): LlamaChatSessionManager = LlamaChatSessionManager(engine)
 }

@@ -2,32 +2,13 @@ package com.browntowndev.pocketcrew.app
 
 import android.content.Context
 import android.util.Log
-import com.browntowndev.pocketcrew.domain.qualifier.ApplicationScope
-import com.browntowndev.pocketcrew.feature.inference.ConversationManagerImpl
 import com.browntowndev.pocketcrew.domain.port.inference.ConversationManagerPort
-import com.browntowndev.pocketcrew.domain.model.inference.DraftOneModelEngine
-import com.browntowndev.pocketcrew.domain.model.inference.DraftTwoModelEngine
-import com.browntowndev.pocketcrew.domain.model.inference.FastModelEngine
-import com.browntowndev.pocketcrew.domain.model.inference.FinalSynthesizerModelEngine
-import com.browntowndev.pocketcrew.domain.model.inference.MainModelEngine
-import com.browntowndev.pocketcrew.domain.model.inference.ModelType
-import com.browntowndev.pocketcrew.domain.model.inference.ThinkingModelEngine
-import com.browntowndev.pocketcrew.domain.model.inference.VisionModelEngine
 import com.browntowndev.pocketcrew.domain.port.inference.InferenceFactoryPort
-import com.browntowndev.pocketcrew.domain.port.inference.LoggingPort
 import com.browntowndev.pocketcrew.domain.port.repository.ActiveModelProviderPort
 import com.browntowndev.pocketcrew.domain.port.repository.LocalModelRepositoryPort
+import com.browntowndev.pocketcrew.domain.qualifier.ApplicationScope
+import com.browntowndev.pocketcrew.feature.inference.ConversationManagerImpl
 import com.browntowndev.pocketcrew.feature.inference.InferenceFactoryImpl
-import com.browntowndev.pocketcrew.feature.inference.LiteRtInferenceServiceImpl
-import com.browntowndev.pocketcrew.feature.inference.MediaPipeInferenceServiceImpl
-import com.browntowndev.pocketcrew.feature.inference.LlamaInferenceServiceImpl
-import com.browntowndev.pocketcrew.feature.inference.LlmInferenceWrapper
-import com.browntowndev.pocketcrew.feature.inference.NoOpInferenceService
-import com.browntowndev.pocketcrew.feature.inference.llama.GpuConfig
-import com.browntowndev.pocketcrew.feature.inference.llama.LlamaChatSessionManager
-import com.browntowndev.pocketcrew.domain.model.inference.LlamaSamplingConfig
-import com.browntowndev.pocketcrew.domain.port.inference.LlmInferencePort
-import com.browntowndev.pocketcrew.domain.usecase.chat.ProcessThinkingTokensUseCase
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
@@ -37,12 +18,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlin.jvm.JvmSuppressWildcards
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import java.io.File
-import javax.inject.Provider
 import javax.inject.Singleton
 
 /**
@@ -53,7 +32,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class EngineModule {
-
     @Binds
     @Singleton
     abstract fun bindInferenceFactory(impl: InferenceFactoryImpl): InferenceFactoryPort
@@ -69,10 +47,12 @@ abstract class EngineModule {
         @Provides
         @Singleton
         @ApplicationScope
-        fun provideApplicationScope(): CoroutineScope =
-            CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        fun provideApplicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-        private fun getModelPath(context: Context, filename: String): String {
+        private fun getModelPath(
+            context: Context,
+            filename: String,
+        ): String {
             // Use getExternalFilesDir to match ModelFileScanner's directory choice
             val modelsDir = File(context.getExternalFilesDir(null), "models")
             return File(modelsDir, filename).absolutePath
@@ -85,12 +65,17 @@ abstract class EngineModule {
             }
         }
 
-        private fun createLlmInference(context: Context, modelPath: String): LlmInference {
-            val options = LlmInference.LlmInferenceOptions.builder()
-                .setModelPath(modelPath)
-                .setMaxTokens(16384)
-                .setPreferredBackend(LlmInference.Backend.GPU)
-                .build()
+        private fun createLlmInference(
+            context: Context,
+            modelPath: String,
+        ): LlmInference {
+            val options =
+                LlmInference.LlmInferenceOptions
+                    .builder()
+                    .setModelPath(modelPath)
+                    .setMaxTokens(16384)
+                    .setPreferredBackend(LlmInference.Backend.GPU)
+                    .build()
             return LlmInference.createFromOptions(context, options)
         }
 
@@ -100,7 +85,7 @@ abstract class EngineModule {
         fun provideConversationManager(
             @ApplicationContext context: Context,
             localModelRepository: LocalModelRepositoryPort,
-            activeModelProvider: ActiveModelProviderPort
+            activeModelProvider: ActiveModelProviderPort,
         ): ConversationManagerPort = ConversationManagerImpl(context, localModelRepository, activeModelProvider)
     }
 }

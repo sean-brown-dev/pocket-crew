@@ -14,9 +14,10 @@ import androidx.compose.ui.text.withStyle
 import com.browntowndev.pocketcrew.core.ui.theme.darkMarkdownTheme
 import com.hrm.markdown.renderer.Markdown
 
-
-private val boldRegex = Regex("\\*\\*(.+?)\\*\\*")
-private val codeRegex = Regex("`([^`]+)`")
+private object MarkdownRegex {
+    val bold = Regex("\\*\\*(.+?)\\*\\*")
+    val code = Regex("`([^`]+)`")
+}
 
 /**
  * A composable that renders markdown text with support for streaming updates.
@@ -100,7 +101,7 @@ private fun parseSimpleMarkdown(text: String): AnnotatedString {
         
         val allMatches = mutableListOf<Pair<IntRange, () -> Unit>>()
         
-        boldRegex.findAll(processedText).forEach { match ->
+        MarkdownRegex.bold.findAll(processedText).forEach { match ->
             allMatches.add(match.range to {
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
                     append(match.groupValues[1])
@@ -108,7 +109,7 @@ private fun parseSimpleMarkdown(text: String): AnnotatedString {
             })
         }
         
-        codeRegex.findAll(processedText).forEach { match ->
+        MarkdownRegex.code.findAll(processedText).forEach { match ->
             allMatches.add(match.range to {
                 withStyle(SpanStyle(fontFamily = FontFamily.Monospace)) {
                     append(match.groupValues[1])
