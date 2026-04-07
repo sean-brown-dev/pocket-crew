@@ -28,6 +28,20 @@ class HttpFileDownloader @Inject constructor(
         private const val TAG = "HttpFileDownloader"
     }
 
+    /**
+     * Safely resolves a child file within a target directory, preventing path traversal.
+     */
+    private fun resolveSafeChild(targetDir: File, filename: String): File {
+        val safeName = File(filename).name
+        val resolvedFile = File(targetDir, safeName)
+
+        val canonicalTargetDir = targetDir.canonicalPath + File.separator
+        if (!resolvedFile.canonicalPath.startsWith(canonicalTargetDir)) {
+            throw SecurityException("Path traversal attempt detected: $safeName")
+        }
+        return resolvedFile
+    }
+
     override suspend fun downloadFile(
         config: FileDownloaderPort.FileDownloadConfig,
         downloadUrl: String,
@@ -38,17 +52,12 @@ class HttpFileDownloader @Inject constructor(
         // Log model info for debugging
         logger.info(TAG, "[DOWNLOAD_START] url=$downloadUrl, sizeBytes=${config.expectedSizeBytes}, existingBytes=$existingBytes filename=${config.filename}")
 
-        // Use filename for the target file and sanitize it to prevent path traversal
+        // Use filename for logs
         val filename = File(config.filename).name
-        val targetFile = File(targetDir, filename)
 
-        // Ensure the target file is actually within the target directory
-        val canonicalTargetDir = targetDir.canonicalPath + File.separator
-        if (!targetFile.canonicalPath.startsWith(canonicalTargetDir)) {
-            throw SecurityException("Path traversal attempt detected: $filename")
-        }
-
-        val tempFile = File(targetDir, "$filename${ModelConfig.TEMP_EXTENSION}")
+        // Safely resolve both target and temp files
+        val targetFile = resolveSafeChild(targetDir, config.filename)
+        val tempFile = resolveSafeChild(targetDir, "${config.filename}${ModelConfig.TEMP_EXTENSION}")
 
         val request = Request.Builder()
             .url(downloadUrl)
@@ -193,16 +202,12 @@ class HttpFileDownloader @Inject constructor(
         targetDir: File,
         progressCallback: FileDownloaderPort.ProgressCallback?
     ): FileDownloaderPort.DownloadResult = withContext(Dispatchers.IO) {
+        // Use filename for logs
         val filename = File(config.filename).name
-        val targetFile = File(targetDir, filename)
 
-        // Ensure the target file is actually within the target directory
-        val canonicalTargetDir = targetDir.canonicalPath + File.separator
-        if (!targetFile.canonicalPath.startsWith(canonicalTargetDir)) {
-            throw SecurityException("Path traversal attempt detected: $filename")
-        }
-
-        val tempFile = File(targetDir, "$filename${ModelConfig.TEMP_EXTENSION}")
+        // Safely resolve both target and temp files
+        val targetFile = resolveSafeChild(targetDir, config.filename)
+        val tempFile = resolveSafeChild(targetDir, "${config.filename}${ModelConfig.TEMP_EXTENSION}")
 
         okHttpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
