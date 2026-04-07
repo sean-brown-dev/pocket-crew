@@ -34,14 +34,6 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4
-      with:
-        languages: 'java-kotlin'
-        build-mode: manual
-        # Optional: Add security-extended or security-and-quality queries
-        # queries: security-extended,security-and-quality
-
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
@@ -60,6 +52,7 @@ jobs:
       with:
         languages: 'java-kotlin'
         build-mode: 'manual'
+        tools: latest
         # Optional: Add security-extended or security-and-quality queries
         # queries: security-extended,security-and-quality
 
@@ -67,9 +60,11 @@ jobs:
       # Manual build step to replace 'autobuild'
       # We use assembleDebug to ensure all Kotlin/Java code is compiled
       # --no-daemon and --no-build-cache are important so CodeQL can trace the full build
+      env:
+        CODEQL_EXTRACTOR_KOTLIN_OVERRIDE_MAXIMUM_VERSION_LIMIT: '2.4.0'
       run: |
         chmod +x gradlew
-        ./gradlew clean assembleDebug --no-daemon --no-build-cache --parallel -Pandroid.builder.sdk.download=true
+        ./gradlew clean assembleDebug --no-daemon --no-build-cache --rerun-tasks --parallel -Pandroid.builder.sdk.download=true
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
