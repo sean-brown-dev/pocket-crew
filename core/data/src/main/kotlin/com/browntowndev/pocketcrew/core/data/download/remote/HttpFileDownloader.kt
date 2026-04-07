@@ -35,6 +35,10 @@ class HttpFileDownloader @Inject constructor(
         existingBytes: Long,
         progressCallback: FileDownloaderPort.ProgressCallback?
     ): FileDownloaderPort.DownloadResult = withContext(Dispatchers.IO) {
+        if (config.filename.isBlank()) {
+            throw IllegalArgumentException("Filename cannot be empty")
+        }
+
         // Log model info for debugging
         logger.info(TAG, "[DOWNLOAD_START] url=$downloadUrl, sizeBytes=${config.expectedSizeBytes}, existingBytes=$existingBytes filename=${config.filename}")
 
@@ -43,10 +47,7 @@ class HttpFileDownloader @Inject constructor(
         val targetFile = File(targetDir, filename)
         val tempFile = File(targetDir, "$filename${ModelConfig.TEMP_EXTENSION}")
 
-        val targetDirPath = targetDir.canonicalPath.let {
-            if (it.endsWith(File.separator)) it else it + File.separator
-        }
-        if (!targetFile.canonicalPath.startsWith(targetDirPath) || !tempFile.canonicalPath.startsWith(targetDirPath)) {
+        if (!targetFile.isSafeChildOf(targetDir)) {
             logger.error(TAG, "Path traversal attempt detected: ${config.filename}")
             throw SecurityException("Invalid filename: Path traversal attempt detected")
         }
@@ -198,10 +199,7 @@ class HttpFileDownloader @Inject constructor(
         val targetFile = File(targetDir, filename)
         val tempFile = File(targetDir, "$filename${ModelConfig.TEMP_EXTENSION}")
 
-        val targetDirPath = targetDir.canonicalPath.let {
-            if (it.endsWith(File.separator)) it else it + File.separator
-        }
-        if (!targetFile.canonicalPath.startsWith(targetDirPath) || !tempFile.canonicalPath.startsWith(targetDirPath)) {
+        if (!targetFile.isSafeChildOf(targetDir)) {
             logger.error(TAG, "Path traversal attempt detected during retry: ${config.filename}")
             throw SecurityException("Invalid filename: Path traversal attempt detected")
         }
@@ -317,6 +315,13 @@ class HttpFileDownloader @Inject constructor(
         } catch (e: Exception) {
             null
         }
+    }
+
+    private fun File.isSafeChildOf(parent: File): Boolean {
+        val parentCanonicalPath = parent.canonicalPath.let {
+            if (it.endsWith(File.separator)) it else it + File.separator
+        }
+        return this.canonicalPath.startsWith(parentCanonicalPath)
     }
 
     private fun isHuggingFaceUrl(urlString: String): Boolean {
