@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -71,7 +72,10 @@ fun ThinkingIndicator(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onToggleDetails() }
+                .clickable(
+                    onClickLabel = if (isExpanded) "Collapse thinking details" else "Expand thinking details",
+                    role = Role.Button
+                ) { onToggleDetails() }
         ) {
             // Dynamic molten-lava orb
             DynamicThinkingAnimation(
@@ -108,7 +112,7 @@ fun ThinkingIndicator(
                 // Chevron that rotates when tapped
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "Expand thinking details",
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
                         .size(24.dp)

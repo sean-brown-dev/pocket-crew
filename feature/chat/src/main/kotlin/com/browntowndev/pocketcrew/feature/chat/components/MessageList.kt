@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -272,7 +273,10 @@ private fun ThoughtForHeader(
         modifier = modifier
             .padding(bottom = 8.dp)
             .fillMaxWidth()
-            .clickable { onViewFullThinking() }
+            .clickable(
+                onClickLabel = if (isExpanded) "Collapse details" else "Expand details",
+                role = Role.Button
+            ) { onViewFullThinking() }
     ) {
         Box(
             modifier = Modifier.size(46.dp),
@@ -299,7 +303,7 @@ private fun ThoughtForHeader(
         Spacer(Modifier.width(6.dp))
         Icon(
             imageVector = Icons.Default.ChevronRight,
-            contentDescription = if (isExpanded) "Collapse details" else "Expand details",
+            contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .size(24.dp)

@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -138,7 +139,10 @@ private fun CompletedStepRow(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onClick() }
+                .clickable(
+                    onClickLabel = "View step results",
+                    role = Role.Button
+                ) { onClick() }
                 .padding(vertical = 4.dp)
         ) {
             Text(
@@ -158,7 +162,10 @@ private fun CompletedStepRow(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
-                .clickable { onClick() }
+                .clickable(
+                    onClickLabel = "View step results",
+                    role = Role.Button
+                ) { onClick() }
                 .padding(horizontal = 12.dp)
         ) {
             // Document icon - Rectangular, rotated 10 degrees, shifted down slightly
