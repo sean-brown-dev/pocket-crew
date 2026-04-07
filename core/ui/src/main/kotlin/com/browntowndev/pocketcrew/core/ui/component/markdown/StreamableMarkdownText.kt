@@ -1,5 +1,4 @@
 package com.browntowndev.pocketcrew.core.ui.component.markdown
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,16 +55,14 @@ fun StreamableMarkdownText(
             modifier = modifier,
         )
     } else {
-        SelectionContainer(modifier = modifier) {
-            Markdown(
-                markdown = markdown,
-                modifier = Modifier,
-                isStreaming = isStreaming,
-                theme = darkMarkdownTheme(),
-                enableScroll = enableScroll,
-                onLinkClick = onLinkClick,
-            )
-        }
+        Markdown(
+            markdown = markdown,
+            modifier = modifier,
+            isStreaming = isStreaming,
+            theme = darkMarkdownTheme(),
+            enableScroll = enableScroll,
+            onLinkClick = onLinkClick,
+        )
     }
 }
 

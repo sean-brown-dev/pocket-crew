@@ -6,9 +6,6 @@ import com.browntowndev.pocketcrew.domain.model.inference.ModelType
 import com.browntowndev.pocketcrew.domain.model.inference.ModelSource
 import com.browntowndev.pocketcrew.domain.model.settings.SystemPromptOption
 import com.browntowndev.pocketcrew.domain.model.inference.ApiProvider
-import com.browntowndev.pocketcrew.domain.model.inference.ApiReasoningEffort
-import com.browntowndev.pocketcrew.domain.model.inference.ApiModelParameterSupport
-import com.browntowndev.pocketcrew.domain.model.config.OpenRouterRoutingConfiguration
 
 @Immutable
 data class StoredMemory(
@@ -52,9 +49,6 @@ data class SettingsUiState(
     val apiModels: List<ApiModelAssetUi> = emptyList(),
     val selectedApiModelAsset: ApiModelAssetUi? = null,
     val selectedApiModelConfig: ApiModelConfigUi? = null,
-    val selectedApiModelParameterSupport: ApiModelParameterSupport = ApiModelParameterSupport.DEFAULT,
-    val discoveredApiModels: List<String> = emptyList(),
-    val isDiscoveringApiModels: Boolean = false,
 
     val defaultAssignments: List<DefaultModelAssignmentUi> = emptyList(),
 
@@ -112,19 +106,14 @@ data class ApiModelConfigUi(
     val frequencyPenalty: Double = 0.0,
     val presencePenalty: Double = 0.0,
     val customHeaders: List<CustomHeaderUi> = emptyList(),
-    val openRouterRouting: OpenRouterRoutingConfiguration = OpenRouterRoutingConfiguration(),
     val thinkingEnabled: Boolean = false,
-    val systemPrompt: String = "",
-    val reasoningEffort: ApiReasoningEffort? = null
+    val systemPrompt: String = ""
 )
 
 @Immutable
 data class LocalModelAssetUi(
     val metadataId: Long,
     val huggingFaceModelName: String,
-    val friendlyName: String,
-    val providerName: String,
-    val format: String,
     val remoteFileName: String,
     val sizeInBytes: Long,
     val configurations: List<LocalModelConfigUi>,
@@ -162,7 +151,6 @@ data class DefaultModelAssignmentUi(
     val currentModelName: String,
     val displayLabel: String,
     val providerName: String? = null,
-    val presetName: String? = null,
 )
 
 internal val ModelType.displayLabel: String
@@ -195,9 +183,6 @@ object MockSettingsData {
         LocalModelAssetUi(
             metadataId = 1,
             huggingFaceModelName = "meta-llama/Meta-Llama-3-8B-Instruct",
-            friendlyName = "Meta Llama 3 8B Instruct",
-            providerName = "meta-llama",
-            format = "GGUF",
             remoteFileName = "Meta-Llama-3-8B-Instruct-Q4_K_M.gguf",
             sizeInBytes = 4_920_000_000L,
             configurations = listOf(
@@ -209,9 +194,6 @@ object MockSettingsData {
         LocalModelAssetUi(
             metadataId = 2,
             huggingFaceModelName = "google/gemma-2-9b-it",
-            friendlyName = "gemma 2 9b it",
-            providerName = "google",
-            format = "GGUF",
             remoteFileName = "gemma-2-9b-it-Q4_K_M.gguf",
             sizeInBytes = 5_400_000_000L,
             configurations = listOf(
@@ -244,24 +226,6 @@ object MockSettingsData {
             credentialAlias = "Anthropic Work",
             configurations = listOf(
                 ApiModelConfigUi(id = 3, credentialsId = 2, displayName = "Standard", temperature = 0.7)
-            )
-        ),
-        ApiModelAssetUi(
-            credentialsId = 3,
-            displayName = "OpenRouter GPT-5.2",
-            provider = ApiProvider.OPENROUTER,
-            modelId = "openai/gpt-5.2",
-            baseUrl = ApiProvider.OPENROUTER.defaultBaseUrl(),
-            isVision = true,
-            credentialAlias = "OpenRouter",
-            configurations = listOf(
-                ApiModelConfigUi(
-                    id = 4,
-                    credentialsId = 3,
-                    displayName = "Reliability",
-                    temperature = 0.3,
-                    openRouterRouting = OpenRouterRoutingConfiguration()
-                )
             )
         )
     )

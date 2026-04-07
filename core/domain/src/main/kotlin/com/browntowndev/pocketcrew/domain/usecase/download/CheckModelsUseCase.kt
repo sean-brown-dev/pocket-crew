@@ -31,14 +31,17 @@ class CheckModelsUseCase @Inject constructor(
     /**
      * Performs filesystem scan and eligibility check for the given models.
      *
+     * @param downloadedModels The map of model types to assets that are actually downloaded (from registry)
      * @param expectedModels The map of model types to assets expected from remote config (from cache)
      * @return DownloadModelsResult containing models that need downloading and scan result
      */
     suspend operator fun invoke(
+        downloadedModels: Map<ModelType, LocalModelAsset>,
         expectedModels: Map<ModelType, LocalModelAsset>
     ): DownloadModelsResult {
-        // Scan filesystem comparing what's expected vs what's physically on disk
+        // Scan filesystem comparing what's downloaded vs what's expected
         val scan = fileScanner.scanAndCreateDirIfNotExist(
+            downloadedModels = downloadedModels,
             expectedModels = expectedModels
         )
 
@@ -48,7 +51,7 @@ class CheckModelsUseCase @Inject constructor(
         }
 
         // Use CheckModelEligibilityUseCase to determine which models need downloading
-        val missingAssets = checkModelEligibilityUseCase.check(expectedModels, scanResult = scan)
+        val missingAssets = checkModelEligibilityUseCase.check(downloadedModels, expectedModels, scanResult = scan)
 
         // Log results
         if (missingAssets.isEmpty()) {

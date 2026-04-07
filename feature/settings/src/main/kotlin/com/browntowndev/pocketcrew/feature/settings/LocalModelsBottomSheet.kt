@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
@@ -122,9 +121,6 @@ fun LocalModelsBottomSheet(
                                 onSelectLocalModelConfig(config)
                                 hideAndNavigate(onNavigateToLocalModelConfigure)
                             },
-                            onRequestDeleteAsset = { asset ->
-                                pendingDeleteTarget = LocalDeleteTarget.Asset(asset.metadataId, asset.friendlyName)
-                            },
                             onRequestDeleteConfig = { config ->
                                 pendingDeleteTarget = LocalDeleteTarget.Config(config.id, config.displayName)
                             },
@@ -140,7 +136,7 @@ fun LocalModelsBottomSheet(
                             availableToDownloadModels = uiState.availableToDownloadModels,
                             onSelectAsset = { asset -> onSelectLocalModelAsset(asset) },
                             onRequestDeleteAsset = { asset ->
-                                pendingDeleteTarget = LocalDeleteTarget.Asset(asset.metadataId, asset.friendlyName)
+                                pendingDeleteTarget = LocalDeleteTarget.Asset(asset.metadataId, asset.huggingFaceModelName)
                             },
                             onDownloadNewModel = {
                                 // TODO: Download new model
@@ -218,14 +214,6 @@ private fun LocalModelAssetListView(
             text = "Manage your downloaded models and their tuning presets.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-
-        Text(
-            text = "Hint: long press to delete the model.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
@@ -317,26 +305,20 @@ private fun LocalModelAssetCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = asset.friendlyName,
+                        text = asset.huggingFaceModelName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "${asset.providerName} • ${asset.format}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                    Text(
-                        text = "${(asset.sizeInBytes / (1024 * 1024 * 1024.0)).format(2)} GB",
+                        text = "${(asset.sizeInBytes / (1024 * 1024 * 1024.0)).format(1)} GB",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                     if (onRequestDeleteAsset != null) {
                         Text(
-                            text = "${asset.configurations.size} Preset(s)",
+                            text = "${asset.configurations.size} Presets",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(top = 4.dp)
@@ -347,7 +329,7 @@ private fun LocalModelAssetCard(
                 if (onRequestDeleteAsset == null) {
                     Icon(
                         imageVector = Icons.Default.Download,
-                        contentDescription = "Download Model ${asset.friendlyName}",
+                        contentDescription = "Download Model ${asset.huggingFaceModelName}",
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -382,7 +364,6 @@ private fun LocalModelConfigListView(
     asset: LocalModelAssetUi,
     onBack: () -> Unit,
     onEditConfig: (LocalModelConfigUi) -> Unit,
-    onRequestDeleteAsset: (LocalModelAssetUi) -> Unit,
     onRequestDeleteConfig: (LocalModelConfigUi) -> Unit,
     onAddConfig: () -> Unit
 ) {
@@ -394,9 +375,9 @@ private fun LocalModelConfigListView(
             IconButton(onClick = onBack, modifier = Modifier.size(40.dp).padding(end = 8.dp)) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to local models")
             }
-            Column(modifier = Modifier.weight(1f)) {
+            Column {
                 Text(
-                    text = asset.friendlyName,
+                    text = asset.huggingFaceModelName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -405,13 +386,6 @@ private fun LocalModelConfigListView(
                     text = "Presets",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            IconButton(onClick = { onRequestDeleteAsset(asset) }, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Delete Local Model ${asset.friendlyName}",
-                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -441,7 +415,7 @@ private fun LocalModelConfigListView(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "Temp: ${config.temperature.format(2)} | Max: ${config.maxTokens}",
+                                text = "Temp: ${config.temperature} | Max: ${config.maxTokens}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

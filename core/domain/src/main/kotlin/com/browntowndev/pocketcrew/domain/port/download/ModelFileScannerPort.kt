@@ -11,11 +11,13 @@ import com.browntowndev.pocketcrew.domain.model.inference.ModelType
 interface ModelFileScannerPort {
     /**
      * Scan the models directory and create it if it doesn't exist.
-     * Validates expected models against physical files on disk (existence and size).
+     * Validates against cache (expected models) for MD5 and format changes.
      *
+     * @param downloadedModels Map of model types to assets actually downloaded (from registry)
      * @param expectedModels Map of model types to assets expected from remote config (from cache)
      */
     suspend fun scanAndCreateDirIfNotExist(
+        downloadedModels: Map<ModelType, LocalModelAsset> = emptyMap(),
         expectedModels: Map<ModelType, LocalModelAsset> = emptyMap()
     ): ModelScanResult
 

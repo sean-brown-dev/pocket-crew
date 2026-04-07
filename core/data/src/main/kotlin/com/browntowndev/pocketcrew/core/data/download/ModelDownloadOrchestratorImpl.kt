@@ -9,7 +9,7 @@ import com.browntowndev.pocketcrew.domain.model.download.ModelConfig
 import com.browntowndev.pocketcrew.domain.port.download.DownloadSpeedTrackerPort
 import com.browntowndev.pocketcrew.domain.port.download.ModelDownloadOrchestratorPort
 import com.browntowndev.pocketcrew.domain.port.inference.LoggingPort
-import com.browntowndev.pocketcrew.domain.usecase.modelconfig.SyncLocalModelRegistryUseCase
+import com.browntowndev.pocketcrew.domain.port.repository.ModelRegistryPort
 import com.browntowndev.pocketcrew.domain.usecase.download.CheckModelEligibilityUseCase
 import com.browntowndev.pocketcrew.domain.usecase.download.InitializeFileProgressUseCase
 import com.browntowndev.pocketcrew.domain.usecase.download.ValidateDownloadConditionsUseCase
@@ -32,9 +32,7 @@ class ModelDownloadOrchestratorImpl @Inject constructor(
     private val initializeFileProgress: InitializeFileProgressUseCase,
     private val workScheduler: DownloadWorkScheduler,
     private val progressParser: WorkProgressParser,
-    private val localModelRepository: com.browntowndev.pocketcrew.domain.port.repository.LocalModelRepositoryPort,
-    private val activeModelProvider: com.browntowndev.pocketcrew.domain.port.repository.ActiveModelProviderPort,
-    private val syncLocalModelRegistryUseCase: SyncLocalModelRegistryUseCase,
+    private val modelRegistry: ModelRegistryPort,
     private val logger: LoggingPort,
     override val speedTracker: DownloadSpeedTrackerPort,
 ) : ModelDownloadOrchestratorPort {
@@ -186,7 +184,7 @@ class ModelDownloadOrchestratorImpl @Inject constructor(
                             "(sha=${asset.metadata.sha256}, preset=${primaryConfig?.displayName}, " +
                             "thinking=${primaryConfig?.thinkingEnabled}, vision=${asset.metadata.visionCapable})"
                     )
-                    syncLocalModelRegistryUseCase(modelType, asset)
+                    modelRegistry.activateLocalModel(modelType, asset)
                     logger.debug(TAG, "Successfully activated model $modelType post-download")
                 } catch (e: Exception) {
                     logger.error(
@@ -201,7 +199,7 @@ class ModelDownloadOrchestratorImpl @Inject constructor(
         // Clean up old files on filesystem - use ALL registered assets, not just downloaded ones
         // This is critical: if we only pass modelsToDownload, valid files will be incorrectly deleted
         try {
-            val allRegisteredAssets = localModelRepository.getAllLocalAssets()
+            val allRegisteredAssets = modelRegistry.getRegisteredAssets()
             cleanupOrphanedModelFiles(allRegisteredAssets)
         } catch (e: Exception) {
             logger.error(TAG, "Failed during filesystem cleanup: ${e.message}")
@@ -219,12 +217,9 @@ class ModelDownloadOrchestratorImpl @Inject constructor(
 
         var fallbackAvailable = false
         for (type in affectedModelTypes) {
-            val activeConfig = activeModelProvider.getActiveConfiguration(type)
-            if (activeConfig != null && activeConfig.isLocal) {
-                if (localModelRepository.getAssetByConfigId(activeConfig.id) != null) {
-                    fallbackAvailable = true
-                    break
-                }
+            if (modelRegistry.getRegisteredAsset(type) != null) {
+                fallbackAvailable = true
+                break
             }
         }
 

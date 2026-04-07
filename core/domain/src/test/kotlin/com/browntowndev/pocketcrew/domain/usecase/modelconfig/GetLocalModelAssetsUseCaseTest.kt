@@ -1,7 +1,7 @@
 package com.browntowndev.pocketcrew.domain.usecase.modelconfig
 
 import com.browntowndev.pocketcrew.domain.model.config.LocalModelAsset
-import com.browntowndev.pocketcrew.domain.port.repository.LocalModelRepositoryPort
+import com.browntowndev.pocketcrew.domain.port.repository.ModelRegistryPort
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class GetLocalModelAssetsUseCaseTest {
-    private val repository = mockk<LocalModelRepositoryPort>()
+    private val repository = mockk<ModelRegistryPort>()
     private lateinit var useCase: GetLocalModelAssetsUseCase
 
     @BeforeEach
@@ -23,7 +23,7 @@ class GetLocalModelAssetsUseCaseTest {
     @Test
     fun `invoke returns stream of local model assets`() = runTest {
         val assets = listOf(mockk<LocalModelAsset>())
-        every { repository.observeAllLocalAssets() } returns flowOf(assets)
+        every { repository.observeAssets() } returns flowOf(assets)
 
         val result = useCase().first()
 

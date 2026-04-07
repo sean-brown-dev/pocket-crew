@@ -15,7 +15,7 @@ import com.browntowndev.pocketcrew.domain.model.inference.PipelineStep
         entity = MessageEntity::class,
         parentColumns = ["id"],
         childColumns = ["user_message_id"],
-        onDelete = ForeignKey.CASCADE
+        onDelete = ForeignKey.RESTRICT
     ), ForeignKey(
         entity = ChatEntity::class,
         parentColumns = ["id"],
