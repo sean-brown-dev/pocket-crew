@@ -2,29 +2,31 @@ package com.browntowndev.pocketcrew.domain.usecase.byok
 
 import com.browntowndev.pocketcrew.domain.model.inference.ApiProvider
 import com.browntowndev.pocketcrew.domain.model.inference.DiscoveredApiModel
-import com.browntowndev.pocketcrew.domain.port.security.ApiKeyProviderPort
 import com.browntowndev.pocketcrew.domain.port.repository.ApiModelCatalogPort
+import com.browntowndev.pocketcrew.domain.port.security.ApiKeyProviderPort
 import javax.inject.Inject
 
-interface FetchApiProviderModelsUseCase {
+interface FetchApiProviderModelDetailUseCase {
     suspend operator fun invoke(
         provider: ApiProvider,
+        modelId: String,
         currentApiKey: String,
         credentialAlias: String? = null,
         baseUrl: String? = null
-    ): List<DiscoveredApiModel>
+    ): DiscoveredApiModel?
 }
 
-class FetchApiProviderModelsUseCaseImpl @Inject constructor(
+class FetchApiProviderModelDetailUseCaseImpl @Inject constructor(
     private val apiModelCatalog: ApiModelCatalogPort,
     private val apiKeyProvider: ApiKeyProviderPort,
-) : FetchApiProviderModelsUseCase {
+) : FetchApiProviderModelDetailUseCase {
     override suspend fun invoke(
         provider: ApiProvider,
+        modelId: String,
         currentApiKey: String,
         credentialAlias: String?,
         baseUrl: String?
-    ): List<DiscoveredApiModel> {
+    ): DiscoveredApiModel? {
         val resolvedApiKey = currentApiKey.ifBlank {
             credentialAlias
                 ?.takeIf { it.isNotBlank() }
@@ -32,8 +34,13 @@ class FetchApiProviderModelsUseCaseImpl @Inject constructor(
                 .orEmpty()
         }
         require(resolvedApiKey.isNotBlank()) {
-            "An API key is required to fetch provider models."
+            "An API key is required to fetch provider model details."
         }
-        return apiModelCatalog.fetchModels(provider, resolvedApiKey, baseUrl)
+        return apiModelCatalog.fetchModel(
+            provider = provider,
+            apiKey = resolvedApiKey,
+            modelId = modelId,
+            baseUrl = baseUrl,
+        )
     }
 }
