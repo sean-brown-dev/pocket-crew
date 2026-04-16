@@ -170,50 +170,12 @@ fun CredentialsConfigurationForm(
     val discoveredVisionCapability = selectedModelMetadata?.visionCapable
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        // Provider Selection
-        ExposedDropdownMenuBox(
-            expanded = providerDropdownExpanded,
-            onExpandedChange = { providerDropdownExpanded = it },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            OutlinedTextField(
-                value = asset.provider.displayName,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("API Provider") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerDropdownExpanded) },
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+        ProviderSelectionField(
+                asset = asset,
+                providerDropdownExpanded = providerDropdownExpanded,
+                onProviderDropdownExpandedChange = { providerDropdownExpanded = it },
+                onAssetChange = onAssetChange
             )
-            ExposedDropdownMenu(
-                expanded = providerDropdownExpanded,
-                onDismissRequest = { providerDropdownExpanded = false }
-            ) {
-                ApiProvider.entries.forEach { provider ->
-                    DropdownMenuItem(
-                        text = { Text(provider.displayName) },
-                        onClick = {
-                            val nextBaseUrl = when {
-                                asset.baseUrl == asset.provider.defaultBaseUrl() -> provider.defaultBaseUrl()
-                                asset.baseUrl.isNullOrBlank() -> provider.defaultBaseUrl()
-                                else -> asset.baseUrl
-                            }
-                            onAssetChange(
-                                asset.copy(
-                                    provider = provider,
-                                    baseUrl = nextBaseUrl,
-                                    modelId = ""
-                                )
-                            )
-                            providerDropdownExpanded = false
-                        }
-                    )
-                }
-            }
-        }
 
         OutlinedTextField(
             value = asset.displayName,
@@ -227,127 +189,29 @@ fun CredentialsConfigurationForm(
 
         val canFetchModels = !isFetchingModels && (apiKey.isNotBlank() || asset.credentialsId.value.isNotEmpty() || selectedReusableCredential != null)
 
-        Box(modifier = Modifier.fillMaxWidth().clickable { showModelSelectionSheet = true }) {
-            OutlinedTextField(
-                value = asset.modelId,
-                onValueChange = { onAssetChange(asset.copy(modelId = it)) },
-                readOnly = true,
-                enabled = false,
-                label = { 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Model")
-                        if (availableModels.isEmpty()) {
-                            Spacer(modifier = Modifier.width(4.dp))
-                            PersistentTooltip(description = "Model discovery is optional. You can always enter a model ID manually.")
-                        }
-                    }
-                },
-                placeholder = {
-                    Text(
-                        if (availableModels.isEmpty()) {
-                            "Type a model ID or load models"
-                        } else {
-                            "Type a model ID or choose one below"
-                        }
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledBorderColor = MaterialTheme.colorScheme.outline,
-                    disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
-                trailingIcon = {
-                    // Invisible spacer to reserve space for the overlaid icon
-                    Spacer(modifier = Modifier.size(24.dp))
-                }
-            )
-            
-            Box(
-                modifier = Modifier.matchParentSize(),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                if (isFetchingModels) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .padding(end = 12.dp)
-                            .size(24.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else if (availableModels.isEmpty()) {
-                    IconButton(
-                        onClick = onFetchModels,
-                        enabled = canFetchModels,
-                        modifier = Modifier.padding(end = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Load Models"
-                        )
-                    }
-                } else {
-                    IconButton(
-                        onClick = { showModelSelectionSheet = true },
-                        modifier = Modifier.padding(end = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = "Select Model"
-                        )
-                    }
-                }
-            }
-        }
-
-        if (showModelSelectionSheet) {
-            ModelSelectionBottomSheet(
+        ModelSelectionField(
+                asset = asset,
                 availableModels = availableModels,
                 filteredModels = filteredModels,
+                isFetchingModels = isFetchingModels,
+                canFetchModels = canFetchModels,
                 searchQuery = searchQuery,
                 providerFilter = providerFilter,
                 sortOption = sortOption,
+                showModelSelectionSheet = showModelSelectionSheet,
+                onShowModelSelectionSheetChange = { showModelSelectionSheet = it },
+                onAssetChange = onAssetChange,
+                onFetchModels = onFetchModels,
                 onUpdateSearchQuery = onUpdateSearchQuery,
                 onUpdateProviderFilter = onUpdateProviderFilter,
-                onUpdateSortOption = onUpdateSortOption,
-                onModelSelected = { selectedModelId ->
-                    onAssetChange(asset.copy(modelId = selectedModelId))
-                },
-                onDismissRequest = { showModelSelectionSheet = false }
+                onUpdateSortOption = onUpdateSortOption
             )
-        }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Vision Enabled",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text = when (discoveredVisionCapability) {
-                        true -> "This model reports image input support, so vision is enabled automatically."
-                        false -> "This model reports text-only input, so vision is disabled automatically."
-                        null -> "Turn this on when the selected model can accept image input."
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Switch(
-                checked = discoveredVisionCapability ?: asset.isVision,
-                onCheckedChange = { onAssetChange(asset.copy(isVision = it)) },
-                enabled = discoveredVisionCapability == null,
+        VisionCapabilitySwitch(
+                isVisionEnabled = asset.isVision,
+                discoveredVisionCapability = discoveredVisionCapability,
+                onVisionEnabledChange = { onAssetChange(asset.copy(isVision = it)) }
             )
-        }
 
         if (canUseStoredCredential) {
             Row(
@@ -432,6 +296,263 @@ fun CredentialsConfigurationForm(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProviderSelectionField(
+    asset: ApiModelAssetUi,
+    providerDropdownExpanded: Boolean,
+    onProviderDropdownExpandedChange: (Boolean) -> Unit,
+    onAssetChange: (ApiModelAssetUi) -> Unit
+) {
+    ExposedDropdownMenuBox(
+        expanded = providerDropdownExpanded,
+        onExpandedChange = onProviderDropdownExpandedChange,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = asset.provider.displayName,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("API Provider") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerDropdownExpanded) },
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        )
+        ExposedDropdownMenu(
+            expanded = providerDropdownExpanded,
+            onDismissRequest = { onProviderDropdownExpandedChange(false) }
+        ) {
+            ApiProvider.entries.forEach { provider ->
+                DropdownMenuItem(
+                    text = { Text(provider.displayName) },
+                    onClick = {
+                        val nextBaseUrl = when {
+                            asset.baseUrl == asset.provider.defaultBaseUrl() -> provider.defaultBaseUrl()
+                            asset.baseUrl.isNullOrBlank() -> provider.defaultBaseUrl()
+                            else -> asset.baseUrl
+                        }
+                        onAssetChange(
+                            asset.copy(
+                                provider = provider,
+                                baseUrl = nextBaseUrl,
+                                modelId = ""
+                            )
+                        )
+                        onProviderDropdownExpandedChange(false)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ModelSelectionField(
+    asset: ApiModelAssetUi,
+    availableModels: List<DiscoveredApiModelUi>,
+    filteredModels: List<DiscoveredApiModelUi>,
+    isFetchingModels: Boolean,
+    canFetchModels: Boolean,
+    searchQuery: String,
+    providerFilter: String?,
+    sortOption: ModelSortOption,
+    showModelSelectionSheet: Boolean,
+    onShowModelSelectionSheetChange: (Boolean) -> Unit,
+    onAssetChange: (ApiModelAssetUi) -> Unit,
+    onFetchModels: () -> Unit,
+    onUpdateSearchQuery: (String) -> Unit,
+    onUpdateProviderFilter: (String?) -> Unit,
+    onUpdateSortOption: (ModelSortOption) -> Unit
+) {
+    Box(modifier = Modifier.fillMaxWidth().clickable { onShowModelSelectionSheetChange(true) }) {
+        OutlinedTextField(
+            value = asset.modelId,
+            onValueChange = { onAssetChange(asset.copy(modelId = it)) },
+            readOnly = true,
+            enabled = false,
+            label = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Model")
+                    if (availableModels.isEmpty()) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        PersistentTooltip(description = "Model discovery is optional. You can always enter a model ID manually.")
+                    }
+                }
+            },
+            placeholder = {
+                Text(
+                    if (availableModels.isEmpty()) {
+                        "Type a model ID or load models"
+                    } else {
+                        "Type a model ID or choose one below"
+                    }
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+            trailingIcon = {
+                // Invisible spacer to reserve space for the overlaid icon
+                Spacer(modifier = Modifier.size(24.dp))
+            }
+        )
+
+        Box(
+            modifier = Modifier.matchParentSize(),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            if (isFetchingModels) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(end = 12.dp)
+                        .size(24.dp),
+                    strokeWidth = 2.dp
+                )
+            } else if (availableModels.isEmpty()) {
+                IconButton(
+                    onClick = onFetchModels,
+                    enabled = canFetchModels,
+                    modifier = Modifier.padding(end = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Load Models"
+                    )
+                }
+            } else {
+                IconButton(
+                    onClick = { onShowModelSelectionSheetChange(true) },
+                    modifier = Modifier.padding(end = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = "Select Model"
+                    )
+                }
+            }
+        }
+    }
+
+    if (showModelSelectionSheet) {
+        ModelSelectionBottomSheet(
+            availableModels = availableModels,
+            filteredModels = filteredModels,
+            searchQuery = searchQuery,
+            providerFilter = providerFilter,
+            sortOption = sortOption,
+            onUpdateSearchQuery = onUpdateSearchQuery,
+            onUpdateProviderFilter = onUpdateProviderFilter,
+            onUpdateSortOption = onUpdateSortOption,
+            onModelSelected = { selectedModelId ->
+                onAssetChange(asset.copy(modelId = selectedModelId))
+            },
+            onDismissRequest = { onShowModelSelectionSheetChange(false) }
+        )
+    }
+}
+
+@Composable
+fun VisionCapabilitySwitch(
+    isVisionEnabled: Boolean,
+    discoveredVisionCapability: Boolean?,
+    onVisionEnabledChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Vision Enabled",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = when (discoveredVisionCapability) {
+                    true -> "This model reports image input support, so vision is enabled automatically."
+                    false -> "This model reports text-only input, so vision is disabled automatically."
+                    null -> "Turn this on when the selected model can accept image input."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Switch(
+            checked = discoveredVisionCapability ?: isVisionEnabled,
+            onCheckedChange = onVisionEnabledChange,
+            enabled = discoveredVisionCapability == null,
+        )
+    }
+}
+
+@Composable
+fun ReusableCredentialDropdown(
+    reusableCredentials: List<ReusableApiCredentialUi>,
+    selectedReusableCredential: ReusableApiCredentialUi?,
+    reusableCredentialDropdownExpanded: Boolean,
+    onReusableCredentialDropdownExpandedChange: (Boolean) -> Unit,
+    onSelectReusableCredential: (ApiCredentialsId?) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End
+    ) {
+        TextButton(onClick = { onReusableCredentialDropdownExpandedChange(true) }) {
+            Text(
+                text = if (selectedReusableCredential == null) {
+                    "Use Existing"
+                } else {
+                    "Using ${selectedReusableCredential.displayName}"
+                }
+            )
+        }
+        DropdownMenu(
+            expanded = reusableCredentialDropdownExpanded,
+            onDismissRequest = { onReusableCredentialDropdownExpandedChange(false) }
+        ) {
+            if (selectedReusableCredential != null) {
+                DropdownMenuItem(
+                    text = { Text("Don't reuse a saved key") },
+                    onClick = {
+                        onSelectReusableCredential(null)
+                        onReusableCredentialDropdownExpandedChange(false)
+                    }
+                )
+            }
+            reusableCredentials.forEach { credential ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(credential.displayName)
+                            Text(
+                                text = credential.modelId,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    onClick = {
+                        onSelectReusableCredential(credential.credentialsId)
+                        onReusableCredentialDropdownExpandedChange(false)
+                    }
+                )
+            }
+        }
     }
 }
 
